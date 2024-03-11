@@ -1,6 +1,7 @@
 import type { LinksFunction, MetaFunction } from '@remix-run/node';
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
 
+import { PageTransitionProgressBar } from './components/progress';
 import tailwindCSS from './styles/tailwind.css';
 
 export const meta: MetaFunction = () => {
@@ -19,6 +20,7 @@ export default function Component() {
         <Links />
       </head>
       <body className="bg-background dark:bg-darkBackground text-lg text-text dark:text-darkText">
+        <PageTransitionProgressBar />
         <Outlet />
         <ScrollRestoration />
         <Scripts />
