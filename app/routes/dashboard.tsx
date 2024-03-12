@@ -1,9 +1,32 @@
-import { Link as RemixLink, Outlet } from '@remix-run/react';
+import { json } from '@remix-run/node';
+import { Link as RemixLink, Outlet, useLoaderData, useLocation } from '@remix-run/react';
 
 import { Container } from '~/components/containers';
 import { NavLink } from '~/components/links';
+import { db } from '~/modules/db.server';
+
+export async function loader() {
+  const firstExpenseQuery = db.expense.findFirst({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  const firstInvoiceQuery = db.invoice.findFirst({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  const [firstExpense, firstInvoice] = await Promise.all([firstExpenseQuery, firstInvoiceQuery]);
+
+  return json({ firstExpense, firstInvoice });
+}
 
 export default function Component() {
+  const { firstExpense, firstInvoice } = useLoaderData<typeof loader>();
+  const location = useLocation();
+
   return (
     <>
       <header>
@@ -22,10 +45,20 @@ export default function Component() {
             </ul>
             <ul className="mt-10 w-full flex flex-row gap-5">
               <li className="ml-auto">
-                <NavLink to="/dashboard/income">Income</NavLink>
+                <NavLink
+                  to={firstInvoice ? `/dashboard/income/${firstInvoice.id}` : '/dashboard/income'}
+                  styleAsActive={location.pathname.startsWith('/dashboard/income')}
+                >
+                  Income
+                </NavLink>
               </li>
               <li className="mr-auto">
-                <NavLink to="/dashboard/expenses">Expenses</NavLink>
+                <NavLink
+                  to={firstExpense ? `/dashboard/expenses/${firstExpense.id}` : '/dashboard/expenses'}
+                  styleAsActive={location.pathname.startsWith('/dashboard/expenses')}
+                >
+                  Expenses
+                </NavLink>
               </li>
             </ul>
           </nav>
