@@ -1,4 +1,5 @@
-import { type ActionFunctionArgs, redirect } from '@remix-run/node';
+import type { ActionFunctionArgs } from '@remix-run/node';
+import { redirect } from '@remix-run/node';
 
 import { Button } from '~/components/buttons';
 import { Form, Input, Textarea } from '~/components/forms';
@@ -15,11 +16,11 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   const amountNumber = Number.parseFloat(amount);
-  if (Number.isNaN(amountNumber)) {
+  if (Number.isNaN(amount)) {
     throw Error('something went wrong');
   }
 
-  const expense = await db.expense.create({
+  const invoice = await db.invoice.create({
     data: {
       title,
       description,
@@ -28,13 +29,13 @@ export async function action({ request }: ActionFunctionArgs) {
     },
   });
 
-  return redirect(`/dashboard/expenses/${expense.id}`);
+  return redirect(`/dashboard/income/${invoice.id}`);
 }
 
 export default function Component() {
   return (
-    <Form method="POST" action="/dashboard/expenses/?index">
-      <Input label="Title:" type="text" placeholder="Dinner for Two" name="title" required />
+    <Form method="POST" action="/dashboard/income/?index">
+      <Input label="Title:" type="text" placeholder="Salaray March" name="title" required />
       <Textarea label="Description:" name="description" />
       <Input label="Amount (in USD):" type="number" defaultValue={0} name="amount" required />
       <Button type="submit" isPrimary>
