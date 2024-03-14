@@ -1,5 +1,5 @@
 import { json } from '@remix-run/node';
-import { Outlet, useLoaderData, useNavigation } from '@remix-run/react';
+import { Outlet, useLoaderData, useNavigation, useParams } from '@remix-run/react';
 import clsx from 'clsx';
 
 import { H1 } from '~/components/headings';
@@ -19,6 +19,7 @@ export async function loader() {
 export default function Component() {
   const navigation = useNavigation();
   const invoices = useLoaderData<typeof loader>();
+  const { id } = useParams();
 
   return (
     <div className="w-full">
@@ -32,7 +33,7 @@ export default function Component() {
           <ul className="flex flex-col">
             {invoices.map((invoice) => {
               return (
-                <ListLinkItem key={invoice.id} to={`/dashboard/income/${invoice.id}`}>
+                <ListLinkItem key={invoice.id} to={`/dashboard/income/${invoice.id}`} isActive={invoice.id === id}>
                   <p>
                     <i>{new Date(invoice.createdAt).toLocaleDateString('en-US')}</i>
                   </p>

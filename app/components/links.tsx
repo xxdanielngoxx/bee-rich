@@ -1,5 +1,5 @@
-import type { LinkProps as RemixLinkProps } from '@remix-run/react';
-import { Link as RemixLink, NavLink as RemixNavLink } from '@remix-run/react';
+import type { FormProps, LinkProps as RemixLinkProps } from '@remix-run/react';
+import { Form, Link as RemixLink, NavLink as RemixNavLink } from '@remix-run/react';
 import { clsx } from 'clsx';
 import type { HTMLAttributes } from 'react';
 
@@ -76,27 +76,44 @@ export function FloatingActionLink({ className, children, ...props }: ButtonLink
   );
 }
 
+type DeleteProps = {
+  ariaLabel: string;
+  action: FormProps['action'];
+};
+
 type ListLinkItemProps = HTMLAttributes<HTMLLIElement> & {
   children: React.ReactNode;
   to: string;
+  isActive?: boolean;
+  deleteProps?: DeleteProps;
 };
 
-export function ListLinkItem({ className = '', to, children, ...props }: ListLinkItemProps) {
+export function ListLinkItem({ isActive, className = '', to, deleteProps, children, ...props }: ListLinkItemProps) {
   return (
-    <li className={`w-full ${className}`} {...props}>
-      <RemixNavLink
-        to={to}
-        className={({ isActive }) =>
-          clsx(
-            'block w-full p-4 border',
-            isActive
-              ? 'bg-secondary dark:bg-darkSecondary border-secondary dark:border-darkSecondary'
-              : 'hover:bg-backgroundPrimary dark:hover:bg-darkBackgroundPrimary border-background dark:border-darkBackground hover:border-secondary dark:hover:border-darkSecondary',
-          )
-        }
-      >
+    <li
+      className={clsx(
+        `w-full flex flex-row items-center border`,
+        isActive
+          ? 'bg-secondary dark:bg-darkSecondary border-secondary dark:border-darkSecondary'
+          : 'hover:bg-backgroundPrimary dark:hover:bg-darkBackgroundPrimary border-background dark:border-darkBackground hover:border-secondary dark:hover:border-darkSecondary',
+        className,
+      )}
+      {...props}
+    >
+      <RemixNavLink to={to} className="block w-full p-4">
         {children}
       </RemixNavLink>
+      {deleteProps && (
+        <Form className="p-8 ml-auto" method="POST" action={deleteProps.action}>
+          <button type="submit" aria-label={deleteProps.ariaLabel} name="intent" value="delete">
+            <path
+              fillRule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </button>
+        </Form>
+      )}
     </li>
   );
 }
