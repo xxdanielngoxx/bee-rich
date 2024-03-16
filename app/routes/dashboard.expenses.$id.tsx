@@ -1,8 +1,9 @@
-import type { LoaderFunctionArgs } from '@remix-run/node';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { useActionData, useLoaderData, useNavigation } from '@remix-run/react';
 
-import { H2 } from '~/components/headings';
+import { Button } from '~/components/buttons';
+import { Form, Input, Textarea } from '~/components/forms';
 import { FloatingActionLink } from '~/components/links';
 import { db } from '~/modules/db.server';
 
@@ -18,15 +19,72 @@ export async function loader({ params }: LoaderFunctionArgs) {
   return json(expense);
 }
 
+export async function action({ params, request }: ActionFunctionArgs) {
+  const { id } = params;
+  if (!id) {
+    throw Error('id route parameter must be defined');
+  }
+
+  const formData = await request.formData();
+  const intent = formData.get('intent');
+
+  if (intent === 'update') {
+    return await updatExpense({ id, formData });
+  }
+
+  throw new Response('Bad request', { status: 400 });
+}
+
+async function updatExpense({ id, formData }: { id: string; formData: FormData }) {
+  const title = formData.get('title');
+  const description = formData.get('description');
+  const amount = formData.get('amount');
+
+  if (typeof title !== 'string' || typeof description !== 'string' || typeof amount !== 'string') {
+    throw Error('something went wrong');
+  }
+
+  const amountNumber = Number.parseFloat(amount);
+  if (Number.isNaN(amountNumber)) {
+    throw Error('something went wrong');
+  }
+
+  await db.expense.update({
+    where: { id },
+    data: { title, amount: amountNumber, description },
+  });
+
+  return json({ success: true });
+}
+
 export default function Component() {
   const expense = useLoaderData<typeof loader>();
 
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state !== 'idle' && navigation.formAction === `/dashboard/expenses/${expense.id}`;
+
+  const actionData = useActionData<typeof action>();
+
   return (
     <>
-      <div className="w-full h-full p-8">
-        <H2>{expense.title}</H2>
-        <p>${expense.amount}</p>
-      </div>
+      <Form method="POST" action={`/dashboard/expenses/${expense.id}`} key={expense.id}>
+        <Input
+          label="Title:"
+          type="text"
+          placeholder="Dinner for Two"
+          name="title"
+          defaultValue={expense.title}
+          required
+        />
+        <Textarea label="Description:" name="description" defaultValue={expense.description ?? ''} />
+        <Input label="Amount (in USD):" type="number" defaultValue={expense.amount} name="amount" required />
+        <Button type="submit" name="intent" value="update" isPrimary disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : 'Save'}
+        </Button>
+        <p aria-live="polite" className="text-green-600">
+          {actionData?.success && 'Changes saved!'}
+        </p>
+      </Form>
       <FloatingActionLink to="/dashboard/expenses/">Add expense</FloatingActionLink>
     </>
   );
