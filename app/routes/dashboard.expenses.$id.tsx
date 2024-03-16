@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
-import { json } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { useActionData, useLoaderData, useNavigation } from '@remix-run/react';
 
 import { Button } from '~/components/buttons';
@@ -29,13 +29,17 @@ export async function action({ params, request }: ActionFunctionArgs) {
   const intent = formData.get('intent');
 
   if (intent === 'update') {
-    return await updatExpense({ id, formData });
+    return updatExpense({ id, formData });
+  }
+
+  if (intent === 'delete') {
+    return deleteExpense({ id, request });
   }
 
   throw new Response('Bad request', { status: 400 });
 }
 
-async function updatExpense({ id, formData }: { id: string; formData: FormData }) {
+async function updatExpense({ id, formData }: { id: string; formData: FormData }): Promise<Response> {
   const title = formData.get('title');
   const description = formData.get('description');
   const amount = formData.get('amount');
@@ -55,6 +59,25 @@ async function updatExpense({ id, formData }: { id: string; formData: FormData }
   });
 
   return json({ success: true });
+}
+
+async function deleteExpense({ id, request }: { id: string; request: Request }): Promise<Response> {
+  const referer = request.headers.get('referer');
+  const redirectPath = referer || '/dashboard/expenses';
+
+  try {
+    await db.expense.delete({
+      where: { id },
+    });
+  } catch (error) {
+    throw new Response('Not found', { status: 404 });
+  }
+
+  if (redirectPath.includes(id)) {
+    return redirect('/dashboard/expenses');
+  }
+
+  return redirect(redirectPath);
 }
 
 export default function Component() {

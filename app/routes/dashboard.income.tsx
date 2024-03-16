@@ -33,7 +33,15 @@ export default function Component() {
           <ul className="flex flex-col">
             {invoices.map((invoice) => {
               return (
-                <ListLinkItem key={invoice.id} to={`/dashboard/income/${invoice.id}`} isActive={invoice.id === id}>
+                <ListLinkItem
+                  key={invoice.id}
+                  to={`/dashboard/income/${invoice.id}`}
+                  isActive={invoice.id === id}
+                  deleteProps={{
+                    action: `/dashboard/income/${invoice.id}`,
+                    ariaLabel: `Delete invoice ${invoice.title}`,
+                  }}
+                >
                   <p>
                     <i>{new Date(invoice.createdAt).toLocaleDateString('en-US')}</i>
                   </p>

@@ -32,7 +32,15 @@ lg:flex-row"
           <ul className="flex flex-col">
             {expenses.map((expense) => {
               return (
-                <ListLinkItem key={expense.id} to={`/dashboard/expenses/${expense.id}`} isActive={expense.id === id}>
+                <ListLinkItem
+                  key={expense.id}
+                  to={`/dashboard/expenses/${expense.id}`}
+                  isActive={expense.id === id}
+                  deleteProps={{
+                    ariaLabel: `Delete expense ${expense.title}`,
+                    action: `/dashboard/expenses/${expense.id}`,
+                  }}
+                >
                   <p>
                     <i>{new Date(expense.createdAt).toLocaleDateString('en-US')}</i>
                   </p>
