@@ -1,5 +1,5 @@
 import type { FormProps, LinkProps as RemixLinkProps } from '@remix-run/react';
-import { Form, Link as RemixLink, NavLink as RemixNavLink } from '@remix-run/react';
+import { Link as RemixLink, NavLink as RemixNavLink, useFetcher } from '@remix-run/react';
 import { clsx } from 'clsx';
 import type { HTMLAttributes } from 'react';
 
@@ -89,6 +89,9 @@ type ListLinkItemProps = HTMLAttributes<HTMLLIElement> & {
 };
 
 export function ListLinkItem({ isActive, className = '', to, deleteProps, children, ...props }: ListLinkItemProps) {
+  const fetcher = useFetcher();
+  const isSubmitting = fetcher.state !== 'idle';
+
   return (
     <li
       className={clsx(
@@ -104,8 +107,19 @@ export function ListLinkItem({ isActive, className = '', to, deleteProps, childr
         {children}
       </RemixNavLink>
       {deleteProps && (
-        <Form className="p-8 ml-auto" method="POST" action={deleteProps.action}>
-          <button type="submit" aria-label={deleteProps.ariaLabel} name="intent" value="delete">
+        <fetcher.Form className="p-8 ml-auto" method="POST" action={deleteProps.action}>
+          <button
+            type="submit"
+            aria-label={deleteProps.ariaLabel}
+            name="intent"
+            value="delete"
+            disabled={isSubmitting}
+            className={
+              isSubmitting
+                ? 'animate-spin duration-1000'
+                : 'hover:text-primary focus:text-primary dark:hover:text-darkPrimary dark:focus:text-darkPrimary'
+            }
+          >
             <svg className="w-8 h-8 " viewBox="0 0 20 20" fill="currentColor">
               <path
                 fillRule="evenodd"
@@ -114,7 +128,7 @@ export function ListLinkItem({ isActive, className = '', to, deleteProps, childr
               />
             </svg>
           </button>
-        </Form>
+        </fetcher.Form>
       )}
     </li>
   );
