@@ -20,8 +20,6 @@ export default function Component() {
   const expenses = useLoaderData<typeof loader>();
   const { id } = useParams();
 
-  console.log(id);
-
   return (
     <div className="w-full">
       <H1>Your expenses</H1>

@@ -1,4 +1,5 @@
 import { type ActionFunctionArgs, redirect } from '@remix-run/node';
+import { useNavigation } from '@remix-run/react';
 
 import { Button } from '~/components/buttons';
 import { Form, Input, Textarea } from '~/components/forms';
@@ -32,13 +33,16 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Component() {
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state !== 'idle' && navigation.formAction === '/dashboard/expenses/?index';
+
   return (
     <Form method="POST" action="/dashboard/expenses/?index">
       <Input label="Title:" type="text" placeholder="Dinner for Two" name="title" required />
       <Textarea label="Description:" name="description" />
       <Input label="Amount (in USD):" type="number" defaultValue={0} name="amount" required />
-      <Button type="submit" isPrimary>
-        Create
+      <Button type="submit" isPrimary disabled={isSubmitting}>
+        {isSubmitting ? 'Creating...' : 'Create'}
       </Button>
     </Form>
   );
