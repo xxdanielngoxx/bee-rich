@@ -1,6 +1,9 @@
 import type { LinksFunction, MetaFunction } from '@remix-run/node';
-import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
+import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useRouteError } from '@remix-run/react';
+import React from 'react';
 
+import { H1 } from './components/headings';
+import { ButtonLink } from './components/links';
 import { PageTransitionProgressBar } from './components/progress';
 import tailwindCSS from './styles/tailwind.css';
 
@@ -12,6 +15,14 @@ export const links: LinksFunction = () => [{ rel: 'stylesheet', href: tailwindCS
 
 export default function Component() {
   return (
+    <Document>
+      <Outlet />
+    </Document>
+  );
+}
+
+function Document({ children }: { readonly children: React.ReactNode }) {
+  return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
@@ -21,11 +32,32 @@ export default function Component() {
       </head>
       <body className="bg-background dark:bg-darkBackground text-lg text-text dark:text-darkText">
         <PageTransitionProgressBar />
-        <Outlet />
+        {children}
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
       </body>
     </html>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  let errorMessage = error instanceof Error ? error.message : null;
+  return (
+    <Document>
+      <section className="m-5 lg:m-20 flex flex-col gap-5">
+        <H1>Unexpected Error</H1>
+        <p>We are very sorry. An unexpected error occurred. Please try again or contact us if the problem persists.</p>
+        {errorMessage && (
+          <div className="border-4 border-red-500 p-10">
+            <p>Error message: {errorMessage}</p>
+          </div>
+        )}
+        <ButtonLink to="/" isPrimary>
+          Back to homepage
+        </ButtonLink>
+      </section>
+    </Document>
   );
 }
