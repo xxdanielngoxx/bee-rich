@@ -1,9 +1,17 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
-import { useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import {
+  isRouteErrorResponse,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+  useParams,
+  useRouteError,
+} from '@remix-run/react';
 
 import { Button } from '~/components/buttons';
 import { Form, Input, Textarea } from '~/components/forms';
+import { H2 } from '~/components/headings';
 import { FloatingActionLink } from '~/components/links';
 import { db } from '~/modules/db.server';
 
@@ -107,6 +115,29 @@ export default function Component() {
         </p>
       </Form>
       <FloatingActionLink to="/dashboard/income">Create Invoice</FloatingActionLink>
+    </>
+  );
+}
+
+export function ErrorBoundary() {
+  const { id } = useParams();
+  const error = useRouteError();
+
+  let heading = `Invoice not found`;
+  let message = `Apologies, something went wrong on our end, please try again.`;
+
+  if (isRouteErrorResponse(error) && error.status === 404) {
+    heading = 'Expense not found';
+    message = `Apologies, the invoice with the id ${id} cannot be found`;
+  }
+
+  return (
+    <>
+      <div className="w-full m-auto lg-max-w-3xl flex flex-col items-center justify-center gap-5">
+        <H2>{heading}</H2>
+        <p>{message}</p>
+      </div>
+      <FloatingActionLink to="/dashboard/income/">Add invoice</FloatingActionLink>
     </>
   );
 }

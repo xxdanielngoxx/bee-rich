@@ -1,9 +1,17 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
-import { useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+import {
+  isRouteErrorResponse,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+  useParams,
+  useRouteError,
+} from '@remix-run/react';
 
 import { Button } from '~/components/buttons';
 import { Form, Input, Textarea } from '~/components/forms';
+import { H2 } from '~/components/headings';
 import { FloatingActionLink } from '~/components/links';
 import { db } from '~/modules/db.server';
 
@@ -63,7 +71,7 @@ async function updatExpense({ id, formData }: { id: string; formData: FormData }
 
 async function deleteExpense({ id, request }: { id: string; request: Request }): Promise<Response> {
   const referer = request.headers.get('referer');
-  const redirectPath = referer || '/dashboard/expenses';
+  const redirectPath = referer ?? '/dashboard/expenses';
 
   try {
     await db.expense.delete({
@@ -108,6 +116,29 @@ export default function Component() {
           {actionData?.success && 'Changes saved!'}
         </p>
       </Form>
+      <FloatingActionLink to="/dashboard/expenses/">Add expense</FloatingActionLink>
+    </>
+  );
+}
+
+export function ErrorBoundary() {
+  const { id } = useParams();
+  const error = useRouteError();
+
+  let heading = `Expense not found`;
+  let message = `Apologies, something went wrong on our end, please try again.`;
+
+  if (isRouteErrorResponse(error) && error.status === 404) {
+    heading = 'Expense not found';
+    message = `Apologies, the expense with the id ${id} cannot be found`;
+  }
+
+  return (
+    <>
+      <div className="w-full m-auto lg-max-w-3xl flex flex-col items-center justify-center gap-5">
+        <H2>{heading}</H2>
+        <p>{message}</p>
+      </div>
       <FloatingActionLink to="/dashboard/expenses/">Add expense</FloatingActionLink>
     </>
   );
