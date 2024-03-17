@@ -1,5 +1,14 @@
 import type { LinksFunction, MetaFunction } from '@remix-run/node';
-import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useRouteError } from '@remix-run/react';
+import {
+  isRouteErrorResponse,
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useRouteError,
+} from '@remix-run/react';
 import React from 'react';
 
 import { H1 } from './components/headings';
@@ -43,12 +52,30 @@ function Document({ children }: { readonly children: React.ReactNode }) {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  let errorMessage = error instanceof Error ? error.message : null;
+  let heading = 'Unexpected Error';
+  let message =
+    'We are very sorry. An unexpected error occurred. Please try again or contact us if the problem persists.';
+
+  if (isRouteErrorResponse(error)) {
+    switch (error.status) {
+      case 401:
+        heading = '401 Unauthorized';
+        message = 'Oops! Looks like you tried to visit a page that you do not have access to.';
+        break;
+      case 404:
+        heading = '404 Not Found';
+        message = 'Oops! Looks like you tried to visit a page that does not exist.';
+        break;
+    }
+  }
+
+  const errorMessage = error instanceof Error ? error.message : null;
+
   return (
     <Document>
       <section className="m-5 lg:m-20 flex flex-col gap-5">
-        <H1>Unexpected Error</H1>
-        <p>We are very sorry. An unexpected error occurred. Please try again or contact us if the problem persists.</p>
+        <H1>{heading}</H1>
+        <p>{message}</p>
         {errorMessage && (
           <div className="border-4 border-red-500 p-10">
             <p>Error message: {errorMessage}</p>
