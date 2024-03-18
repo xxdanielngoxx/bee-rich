@@ -3,7 +3,7 @@ import { json } from '@remix-run/node';
 import { Outlet, useLoaderData, useNavigation, useParams, useSearchParams } from '@remix-run/react';
 import clsx from 'clsx';
 
-import { Form, Input } from '~/components/forms';
+import { Form, SearchInput } from '~/components/forms';
 import { H1 } from '~/components/headings';
 import { ListLinkItem } from '~/components/links';
 import { db } from '~/modules/db.server';
@@ -41,7 +41,7 @@ export default function Component() {
         <section className="lg:p-8 w-full lg:max-w-2xl">
           <h2 className="sr-only">All your income</h2>
           <Form method="GET">
-            <Input name="q" type="search" label="Search by title" defaultValue={searchQuery} />
+            <SearchInput name="q" type="search" label="Search by title" defaultValue={searchQuery} />
           </Form>
           <ul className="flex flex-col">
             {invoices.map((invoice) => {
