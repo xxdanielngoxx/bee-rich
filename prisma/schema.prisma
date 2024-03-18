@@ -20,6 +20,8 @@ model Expense {
   updatedAt    DateTime @updatedAt
   User         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String?
+
+  @@unique([id, userId])
 }
 
 model Invoice {
@@ -32,6 +34,8 @@ model Invoice {
   updatedAt    DateTime @updatedAt
   User         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String?
+
+  @@unique([id, userId])
 }
 
 model User {

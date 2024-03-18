@@ -1,5 +1,5 @@
 import type { User } from '@prisma/client';
-import { createCookieSessionStorage } from '@remix-run/node';
+import { createCookieSessionStorage, redirect } from '@remix-run/node';
 import bcrypt from 'bcryptjs';
 
 import { db } from '../db.server';
@@ -67,7 +67,7 @@ if (!sessionSecret) {
   throw new Error('SESSION_SECRET must be set');
 }
 
-const { getSession, commitSession } = createCookieSessionStorage({
+const { getSession, commitSession, destroySession } = createCookieSessionStorage({
   cookie: {
     name: 'bee-rich-session',
     secure: process.env.NODE_ENV === 'production',
@@ -84,4 +84,17 @@ export async function createUserSession(user: User, headers = new Headers()) {
   session.set('userId', user.id);
   headers.set('Set-Cookie', await commitSession(session));
   return headers;
+}
+
+async function getUserSession(request: Request) {
+  return getSession(request.headers.get('Cookie'));
+}
+
+export async function logout(request: Request) {
+  const session = await getUserSession(request);
+  return redirect('/login', {
+    headers: {
+      'Set-Cookie': await destroySession(session),
+    },
+  });
 }
