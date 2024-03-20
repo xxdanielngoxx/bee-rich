@@ -74,7 +74,7 @@ async function updatExpense({
 
   await db.expense.update({
     where: { id, userId },
-    data: { title, amount: amountNumber, description },
+    data: { title, amount: amountNumber, description, user: { connect: { id: userId } } },
   });
 
   return json({ success: true });

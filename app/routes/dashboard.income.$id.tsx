@@ -71,12 +71,12 @@ async function updateIncome({
   }
 
   await db.invoice.update({
-    where: { id },
+    where: { id, userId },
     data: {
       title,
       description,
       amount: amountNumber,
-      User: {
+      user: {
         connect: {
           id: userId,
         },

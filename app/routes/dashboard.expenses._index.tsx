@@ -28,7 +28,7 @@ export async function action({ request }: ActionFunctionArgs) {
       description,
       amount: amountNumber,
       currencyCode: 'USD',
-      User: {
+      user: {
         connect: {
           id: userId,
         },

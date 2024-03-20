@@ -18,7 +18,14 @@ import { getUser } from './modules/session/session.server';
 import tailwindCSS from './styles/tailwind.css';
 
 export const meta: MetaFunction = () => {
-  return [{ title: 'BeeRich' }];
+  return [
+    { title: 'BeeRich' },
+    {
+      name: 'description',
+      content:
+        'Bee in control of your finances with BeeRich - the buzzworthy expense and income tracker with a modern interface. Keep your finances organized and make honey with your money!',
+    },
+  ];
 };
 
 export const links: LinksFunction = () => [{ rel: 'stylesheet', href: tailwindCSS }];

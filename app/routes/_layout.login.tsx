@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { useActionData, useNavigation } from '@remix-run/react';
 
@@ -64,3 +64,15 @@ export default function Component() {
     </Card>
   );
 }
+
+export const meta: MetaFunction = () => {
+  return [
+    {
+      title: 'Login | BeeRich',
+    },
+    {
+      name: 'description',
+      content: 'Log into your BeeRich account to track your expenses and income.',
+    },
+  ];
+};
