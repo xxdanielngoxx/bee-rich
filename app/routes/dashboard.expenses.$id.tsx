@@ -14,12 +14,14 @@ import { Form, Input, Textarea } from '~/components/forms';
 import { H2 } from '~/components/headings';
 import { FloatingActionLink } from '~/components/links';
 import { db } from '~/modules/db.server';
+import { requireUserId } from '~/modules/session/session.server';
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ params, request }: LoaderFunctionArgs) {
+  const userId = await requireUserId(request);
   const { id } = params;
 
   const expense = await db.expense.findUnique({
-    where: { id },
+    where: { id, userId },
   });
 
   if (!expense) throw new Response('Not found', { status: 404 });
@@ -28,6 +30,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 }
 
 export async function action({ params, request }: ActionFunctionArgs) {
+  const userId = await requireUserId(request);
   const { id } = params;
   if (!id) {
     throw Error('id route parameter must be defined');
@@ -37,17 +40,25 @@ export async function action({ params, request }: ActionFunctionArgs) {
   const intent = formData.get('intent');
 
   if (intent === 'update') {
-    return updatExpense({ id, formData });
+    return updatExpense({ id, userId, formData });
   }
 
   if (intent === 'delete') {
-    return deleteExpense({ id, request });
+    return deleteExpense({ id, userId, request });
   }
 
   throw new Response('Bad request', { status: 400 });
 }
 
-async function updatExpense({ id, formData }: { id: string; formData: FormData }): Promise<Response> {
+async function updatExpense({
+  id,
+  userId,
+  formData,
+}: {
+  id: string;
+  userId: string;
+  formData: FormData;
+}): Promise<Response> {
   const title = formData.get('title');
   const description = formData.get('description');
   const amount = formData.get('amount');
@@ -62,20 +73,28 @@ async function updatExpense({ id, formData }: { id: string; formData: FormData }
   }
 
   await db.expense.update({
-    where: { id },
+    where: { id, userId },
     data: { title, amount: amountNumber, description },
   });
 
   return json({ success: true });
 }
 
-async function deleteExpense({ id, request }: { id: string; request: Request }): Promise<Response> {
+async function deleteExpense({
+  id,
+  request,
+  userId,
+}: {
+  id: string;
+  userId: string;
+  request: Request;
+}): Promise<Response> {
   const referer = request.headers.get('referer');
   const redirectPath = referer ?? '/dashboard/expenses';
 
   try {
     await db.expense.delete({
-      where: { id },
+      where: { id, userId },
     });
   } catch (error) {
     throw new Response('Not found', { status: 404 });

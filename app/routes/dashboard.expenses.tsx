@@ -7,13 +7,16 @@ import { Form, SearchInput } from '~/components/forms';
 import { H1 } from '~/components/headings';
 import { ListLinkItem } from '~/components/links';
 import { db } from '~/modules/db.server';
+import { requireUserId } from '~/modules/session/session.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const userId = await requireUserId(request);
   const url = new URL(request.url);
   const searchString = url.searchParams.get('q');
 
   const expenses = await db.expense.findMany({
     where: {
+      userId,
       title: {
         contains: searchString ?? '',
       },

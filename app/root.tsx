@@ -1,4 +1,4 @@
-import type { LinksFunction, MetaFunction } from '@remix-run/node';
+import type { LinksFunction, LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import {
   isRouteErrorResponse,
   Links,
@@ -14,6 +14,7 @@ import React from 'react';
 import { H1 } from './components/headings';
 import { ButtonLink } from './components/links';
 import { PageTransitionProgressBar } from './components/progress';
+import { getUser } from './modules/session/session.server';
 import tailwindCSS from './styles/tailwind.css';
 
 export const meta: MetaFunction = () => {
@@ -21,6 +22,11 @@ export const meta: MetaFunction = () => {
 };
 
 export const links: LinksFunction = () => [{ rel: 'stylesheet', href: tailwindCSS }];
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await getUser(request);
+  return { user };
+}
 
 export default function Component() {
   return (

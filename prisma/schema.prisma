@@ -18,7 +18,7 @@ model Expense {
   currencyCode String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  User         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String?
 
   @@unique([id, userId])
@@ -32,7 +32,7 @@ model Invoice {
   currencyCode String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  User         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String?
 
   @@unique([id, userId])

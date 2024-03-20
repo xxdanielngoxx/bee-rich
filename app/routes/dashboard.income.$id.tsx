@@ -14,11 +14,13 @@ import { Form, Input, Textarea } from '~/components/forms';
 import { H2 } from '~/components/headings';
 import { FloatingActionLink } from '~/components/links';
 import { db } from '~/modules/db.server';
+import { requireUserId } from '~/modules/session/session.server';
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ params, request }: LoaderFunctionArgs) {
+  const userId = await requireUserId(request);
   const { id } = params;
 
-  const income = await db.invoice.findUnique({ where: { id } });
+  const income = await db.invoice.findUnique({ where: { id, userId } });
 
   if (!income) throw new Response('Not found', { status: 404 });
 
@@ -26,6 +28,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 }
 
 export async function action({ params, request }: ActionFunctionArgs) {
+  const userId = await requireUserId(request);
   const { id } = params;
   if (!id) {
     throw Error('id route parameter must be defined');
@@ -35,17 +38,25 @@ export async function action({ params, request }: ActionFunctionArgs) {
   const intent = formData.get('intent');
 
   if (intent === 'update') {
-    return updateIncome({ id, formData });
+    return updateIncome({ id, userId, formData });
   }
 
   if (intent === 'delete') {
-    return deleteIncome({ id, request });
+    return deleteIncome({ id, userId, request });
   }
 
   throw new Response('Bad request', { status: 400 });
 }
 
-async function updateIncome({ id, formData }: { id: string; formData: FormData }): Promise<Response> {
+async function updateIncome({
+  id,
+  userId,
+  formData,
+}: {
+  id: string;
+  userId: string;
+  formData: FormData;
+}): Promise<Response> {
   const title = formData.get('title');
   const description = formData.get('description');
   const amount = formData.get('amount');
@@ -61,19 +72,36 @@ async function updateIncome({ id, formData }: { id: string; formData: FormData }
 
   await db.invoice.update({
     where: { id },
-    data: { title, description, amount: amountNumber },
+    data: {
+      title,
+      description,
+      amount: amountNumber,
+      User: {
+        connect: {
+          id: userId,
+        },
+      },
+    },
   });
 
   return json({ success: true });
 }
 
-async function deleteIncome({ id, request }: { id: string; request: Request }): Promise<Response> {
+async function deleteIncome({
+  id,
+  userId,
+  request,
+}: {
+  id: string;
+  userId: string;
+  request: Request;
+}): Promise<Response> {
   const referer = request.headers.get('referer');
   const redirectPath = referer ?? '/dashboard/income';
 
   try {
     await db.invoice.delete({
-      where: { id },
+      where: { id, userId },
     });
   } catch (error) {
     throw new Response('Not found', { status: 404 });

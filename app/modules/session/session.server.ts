@@ -24,7 +24,7 @@ export async function registerUser({ name, email, password }: UserRegistrationDa
   }
 
   try {
-    return db.user.create({
+    return await db.user.create({
       data: {
         name: sanitizedName,
         email: sanitizedEmail,
@@ -113,10 +113,11 @@ export async function getUser(request: Request) {
   }
 
   try {
-    return db.user.findUnique({
+    return await db.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
+        name: true,
         email: true,
         createdAt: true,
         updatedAt: true,
@@ -125,4 +126,14 @@ export async function getUser(request: Request) {
   } catch (error) {
     throw logout(request);
   }
+}
+
+export async function requireUserId(request: Request) {
+  const session = await getUserSession(request);
+  const userId = session.get('userId');
+  if (!userId || typeof userId !== 'string') {
+    throw redirect('/login');
+  }
+
+  return userId;
 }
