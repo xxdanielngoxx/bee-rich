@@ -45,10 +45,11 @@ export default function Component() {
   const isSubmitting = navigation.state !== 'idle' && navigation.formAction === '/dashboard/income/?index';
 
   return (
-    <Form method="POST" action="/dashboard/income/?index">
+    <Form method="POST" action="/dashboard/income/?index" encType="multipart/form-data">
       <Input label="Title:" type="text" placeholder="Salaray March" name="title" required />
       <Textarea label="Description:" name="description" />
       <Input label="Amount (in USD):" type="number" defaultValue={0} name="amount" required />
+      <Input label="Attachment" type="file" name="attachment" />
       <Button type="submit" isPrimary disabled={isSubmitting}>
         {isSubmitting ? 'Creating...' : 'Create'}
       </Button>

@@ -44,10 +44,11 @@ export default function Component() {
   const isSubmitting = navigation.state !== 'idle' && navigation.formAction === '/dashboard/expenses/?index';
 
   return (
-    <Form method="POST" action="/dashboard/expenses/?index">
+    <Form method="POST" action="/dashboard/expenses/?index" encType="multipart/form-data">
       <Input label="Title:" type="text" placeholder="Dinner for Two" name="title" required />
       <Textarea label="Description:" name="description" />
       <Input label="Amount (in USD):" type="number" defaultValue={0} name="amount" required />
+      <Input label="Attachment" type="file" name="attachment" />
       <Button type="submit" isPrimary disabled={isSubmitting}>
         {isSubmitting ? 'Creating...' : 'Create'}
       </Button>
