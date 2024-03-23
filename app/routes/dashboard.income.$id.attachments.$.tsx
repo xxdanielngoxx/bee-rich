@@ -1,10 +1,26 @@
-import type { LoaderFunctionArgs } from '@remix-run/node';
+import { type LoaderFunctionArgs, redirect } from '@remix-run/node';
+
+import { buildFileResponse } from '~/modules/attachments.server';
+import { db } from '~/modules/db.server';
+import { requireUserId } from '~/modules/session/session.server';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
+  const userId = await requireUserId(request);
   const { id } = params;
   const slug = params['*'];
   if (!id || !slug) throw Error('id and slug route parameters must be defined');
 
-  console.log({ id, slug });
-  return new Response('Coming soon!');
+  const invoice = await db.invoice.findUnique({
+    where: { id_userId: { id, userId } },
+  });
+
+  if (!invoice || !invoice.attachment) {
+    throw new Response('Not Found', { status: 404 });
+  }
+
+  if (slug !== invoice.attachment) {
+    return redirect(`/dashboard/expenses/${id}/attachments/${invoice.attachment}`);
+  }
+
+  return buildFileResponse(invoice.attachment);
 }

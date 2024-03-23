@@ -1,19 +1,16 @@
-import { type ActionFunctionArgs, redirect } from '@remix-run/node';
+import { type ActionFunctionArgs, redirect, unstable_parseMultipartFormData } from '@remix-run/node';
 import { useNavigation } from '@remix-run/react';
 
 import { Button } from '~/components/buttons';
 import { Form, Input, Textarea } from '~/components/forms';
-import { writeFile } from '~/modules/attachments.server';
+import { uploadHandler } from '~/modules/attachments.server';
 import { db } from '~/modules/db.server';
 import { requireUserId } from '~/modules/session/session.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
-  const formData = await request.formData();
-  const file = formData.get('attachment');
-  if (file && file instanceof File) {
-    writeFile(file);
-  }
+  const formData = await unstable_parseMultipartFormData(request, uploadHandler);
+
   const title = formData.get('title');
   const description = formData.get('description');
   const amount = formData.get('amount');
@@ -27,12 +24,18 @@ export async function action({ request }: ActionFunctionArgs) {
     throw Error('something went wrong');
   }
 
+  let attachment = formData.get('attachment');
+  if (!attachment || typeof attachment !== 'string') {
+    attachment = null;
+  }
+
   const expense = await db.expense.create({
     data: {
       title,
       description,
       amount: amountNumber,
       currencyCode: 'USD',
+      attachment,
       user: {
         connect: {
           id: userId,

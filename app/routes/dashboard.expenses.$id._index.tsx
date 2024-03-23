@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
+import { json, redirect, unstable_parseMultipartFormData } from '@remix-run/node';
 import {
   isRouteErrorResponse,
   useActionData,
@@ -13,6 +13,7 @@ import { Button } from '~/components/buttons';
 import { Attachment, Form, Input, Textarea } from '~/components/forms';
 import { H2 } from '~/components/headings';
 import { FloatingActionLink } from '~/components/links';
+import { deleteAttachment, uploadHandler } from '~/modules/attachments.server';
 import { db } from '~/modules/db.server';
 import { requireUserId } from '~/modules/session/session.server';
 
@@ -36,21 +37,32 @@ export async function action({ params, request }: ActionFunctionArgs) {
     throw Error('id route parameter must be defined');
   }
 
-  const formData = await request.formData();
+  let formData: FormData;
+  const contentType = request.headers.get('content-type');
+  if (contentType?.toLowerCase().includes('multipart/form-data')) {
+    formData = await unstable_parseMultipartFormData(request, uploadHandler);
+  } else {
+    formData = await request.formData();
+  }
+
   const intent = formData.get('intent');
 
   if (intent === 'update') {
-    return updatExpense({ id, userId, formData });
+    return updateExpense({ id, userId, formData });
   }
 
   if (intent === 'delete') {
     return deleteExpense({ id, userId, request });
   }
 
+  if (intent === 'remove-attachment') {
+    return removeAttachment(formData, id, userId);
+  }
+
   throw new Response('Bad request', { status: 400 });
 }
 
-async function updatExpense({
+async function updateExpense({
   id,
   userId,
   formData,
@@ -72,9 +84,14 @@ async function updatExpense({
     throw Error('something went wrong');
   }
 
+  let attachment: FormDataEntryValue | null | undefined = formData.get('attachment');
+  if (!attachment || typeof attachment !== 'string') {
+    attachment = undefined;
+  }
+
   await db.expense.update({
     where: { id, userId },
-    data: { title, amount: amountNumber, description, user: { connect: { id: userId } } },
+    data: { title, amount: amountNumber, description, attachment },
   });
 
   return json({ success: true });
@@ -93,9 +110,13 @@ async function deleteExpense({
   const redirectPath = referer ?? '/dashboard/expenses';
 
   try {
-    await db.expense.delete({
+    const expense = await db.expense.delete({
       where: { id, userId },
     });
+
+    if (expense.attachment) {
+      deleteAttachment(expense.attachment);
+    }
   } catch (error) {
     throw new Response('Not found', { status: 404 });
   }
@@ -105,6 +126,22 @@ async function deleteExpense({
   }
 
   return redirect(redirectPath);
+}
+
+async function removeAttachment(formData: FormData, id: string, userId: string): Promise<Response> {
+  const attachmentUrl = formData.get('attachmentUrl');
+  if (!attachmentUrl || typeof attachmentUrl !== 'string') {
+    throw Error('something went wrong');
+  }
+
+  const fileName = attachmentUrl.split('/').pop();
+  if (!fileName) throw Error('something went wrong');
+  await db.expense.update({
+    where: { id_userId: { id, userId } },
+    data: { attachment: null },
+  });
+  deleteAttachment(fileName);
+  return json({ success: true });
 }
 
 export default function Component() {
@@ -136,7 +173,7 @@ export default function Component() {
         {expense.attachment ? (
           <Attachment
             label="Current Attachment"
-            attachmentUrl={`/dashboard/expenses/${expense.id}/attachments/${expense.amount}`}
+            attachmentUrl={`/dashboard/expenses/${expense.id}/attachments/${expense.attachment}`}
           />
         ) : (
           <Input label="New Attachment" type="file" name="attachment" />
