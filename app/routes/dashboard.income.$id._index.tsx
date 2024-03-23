@@ -10,7 +10,7 @@ import {
 } from '@remix-run/react';
 
 import { Button } from '~/components/buttons';
-import { Form, Input, Textarea } from '~/components/forms';
+import { Attachment, Form, Input, Textarea } from '~/components/forms';
 import { H2 } from '~/components/headings';
 import { FloatingActionLink } from '~/components/links';
 import { db } from '~/modules/db.server';
@@ -124,7 +124,7 @@ export default function Component() {
 
   return (
     <>
-      <Form method="POST" action={`/dashboard/income/${income.id}`} key={income.id}>
+      <Form method="POST" action={`/dashboard/income/${income.id}?index`} key={income.id} encType="multipart/form-data">
         <Input
           label="Title:"
           type="text"
@@ -135,6 +135,14 @@ export default function Component() {
         />
         <Textarea label="Description:" name="description" defaultValue={income.description ?? ''} />
         <Input label="Amount (in USD):" type="number" defaultValue={income.amount} name="amount" required />
+        {income.attachment ? (
+          <Attachment
+            label="Current Attachment"
+            attachmentUrl={`/dashboard/income/${income.id}/attachments/${income.amount}`}
+          />
+        ) : (
+          <Input label="New Attachment" type="file" name="attachment" />
+        )}
         <Button type="submit" name="intent" value="update" isPrimary disabled={isSubmitting}>
           {isSubmitting ? 'Saving...' : 'Save'}
         </Button>

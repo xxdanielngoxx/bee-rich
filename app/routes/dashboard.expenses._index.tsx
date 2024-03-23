@@ -3,12 +3,17 @@ import { useNavigation } from '@remix-run/react';
 
 import { Button } from '~/components/buttons';
 import { Form, Input, Textarea } from '~/components/forms';
+import { writeFile } from '~/modules/attachments.server';
 import { db } from '~/modules/db.server';
 import { requireUserId } from '~/modules/session/session.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
   const formData = await request.formData();
+  const file = formData.get('attachment');
+  if (file && file instanceof File) {
+    writeFile(file);
+  }
   const title = formData.get('title');
   const description = formData.get('description');
   const amount = formData.get('amount');

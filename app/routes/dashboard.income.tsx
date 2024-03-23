@@ -54,7 +54,7 @@ export default function Component() {
                   to={`/dashboard/income/${invoice.id}`}
                   isActive={invoice.id === id}
                   deleteProps={{
-                    action: `/dashboard/income/${invoice.id}`,
+                    action: `/dashboard/income/${invoice.id}?index`,
                     ariaLabel: `Delete invoice ${invoice.title}`,
                   }}
                 >
